@@ -25,6 +25,8 @@ class AppUpdater {
 
 let mainWindow: BrowserWindow | null = null;
 
+process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
+
 ipcMain.on('ipc-example', async (event, arg) => {
   const msgTemplate = (pingPong: string) => `IPC test: ${pingPong}`;
   console.log(msgTemplate(arg));
@@ -74,7 +76,10 @@ const createWindow = async () => {
     width: 1024,
     height: 728,
     icon: getAssetPath('icon.png'),
+    fullscreen: true,
     webPreferences: {
+      // devTools: false,
+      webSecurity: false,
       preload: app.isPackaged
         ? path.join(__dirname, 'preload.js')
         : path.join(__dirname, '../../.erb/dll/preload.js'),
