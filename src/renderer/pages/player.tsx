@@ -1,14 +1,49 @@
 import ReactPlayer from 'react-player';
 import React, { useState, useEffect } from 'react';
-import screenfull from 'screenfull';
-import { url } from 'inspector';
 
-const placeHolder =
-  'file:///Users/isaacsante/code/studio-experiments/test-media/video/prairieWinds_video.mp4 ';
+// .player-wrapper {
+//     width: auto;
+//     height: auto;
+//   }
+//   .react-player {
+//     padding-top: 56.25%;
+//     position: relative;
+//   }
+
+//   .react-player > div {
+//     position: absolute;
+//   }
+
+const checkMedia = (incomingMedia: any) => {
+  let mediaUrl;
+  incomingMedia?.video
+    ? (mediaUrl = incomingMedia.video.videoUrl)
+    : incomingMedia?.audio
+    ? (mediaUrl = incomingMedia.audio.audioUrl)
+    : '';
+  mediaUrl = 'file://' + mediaUrl;
+  return mediaUrl;
+};
 
 export default function MediaPlayer(): JSX.Element {
-  const [play, setPlay] = useState(false);
+  const [playing, setPlaying] = useState(false);
   const [media, setMedia] = useState('');
+  const [muteVideo, setMuteVideo] = useState(false);
+
+  useEffect(() => {
+    window.ipcApi.on('media-received', (event, args) => {
+      setPlaying(false);
+      setMedia('');
+      let incomingMedia = JSON.parse(args[0]);
+      if (incomingMedia == 'stop') {
+        console.log('video has stoped');
+      } else {
+        let validUrl = checkMedia(incomingMedia);
+        setMedia(validUrl);
+        setPlaying(true);
+      }
+    });
+  }, []);
 
   const startCallback = () => {
     console.log(`${media} : is starting`);
@@ -16,24 +51,22 @@ export default function MediaPlayer(): JSX.Element {
 
   const endCallback = () => {
     setMedia('');
-    setPlay(false);
+    setPlaying(false);
   };
 
   return (
-    <div>
-      <div className={play ? 'visible' : 'invisible'}>
-        <ReactPlayer
-          className="absolute top-0 left-0"
-          url={media}
-          playing={play}
-          controls={false}
-          muted={true}
-          width="100%"
-          height="100%"
-          onStart={startCallback}
-          onEnded={endCallback}
-        />
-      </div>
+    <div className="player">
+      <div></div>
+      <ReactPlayer
+        className="react-player"
+        url={media}
+        playing={playing}
+        controls={false}
+        width="100%"
+        height="100%"
+        onStart={startCallback}
+        onEnded={endCallback}
+      />
     </div>
   );
 }
