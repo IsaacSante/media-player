@@ -7,17 +7,9 @@
 @tailwind components;
 @tailwind utilities;
 
-/* video {
-  @apply absolute object-fill;
-} */
-
 .player-wrapper {
   width: auto;
   height: auto;
-}
-.react-player {
-  /* padding-top: 56.25%; */
-  /* position: relative; */
 }
 
 video {
@@ -26,8 +18,6 @@ video {
 }
 
 .player {
-  /* min-height: 100vh;
-  min-width: 100vw; */
   width: auto;
   height: auto;
   background-color: aqua;
