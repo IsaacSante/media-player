@@ -14,11 +14,17 @@ import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
-import {
-  subscribeToRedis,
-  conntectPublisher,
-  publishToRedis,
-} from './redisUtils';
+import configureRedisConnection from './RedisConfiguration';
+import { Communicator } from 'rr-comm-bus-js';
+import { sendToRenderer } from '../renderer/util/ipcUtils';
+
+// import {
+//   subscribeToRedis,
+//   conntectPublisher,
+//   publishToRedis,
+// } from './redisUtils';
+
+let communicator: Communicator;
 
 class AppUpdater {
   constructor() {
@@ -28,16 +34,9 @@ class AppUpdater {
   }
 }
 
-let incomingVideo: string;
 let mainWindow: BrowserWindow | null = null;
 
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
-
-// ipcMain.on('ipc-example', async (event, arg) => {
-//   const msgTemplate = (pingPong: string) => `IPC test: ${pingPong}`;
-//   console.log(msgTemplate(arg));
-//   event.reply('ipc-example', msgTemplate('pong'));
-// });
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
@@ -102,6 +101,15 @@ const createWindow = async () => {
       mainWindow.minimize();
     } else {
       mainWindow.show();
+      mainWindow.maximize();
+      communicator = configureRedisConnection(mainWindow); //the window will not be undefined here
+
+      communicator.subscribe('voice', (message) => {
+        let msg = JSON.stringify(message.body);
+        if (mainWindow) {
+          sendToRenderer(mainWindow.webContents, 'media-received', msg);
+        }
+      });
     }
   });
 
@@ -121,9 +129,8 @@ const createWindow = async () => {
   // Remove this if your app does not use auto updates
   // eslint-disable-next-line
   new AppUpdater();
-
-  conntectPublisher();
-  subscribeToRedis(mainWindow);
+  // conntectPublisher();
+  // subscribeToRedis(mainWindow);
 };
 
 /**
